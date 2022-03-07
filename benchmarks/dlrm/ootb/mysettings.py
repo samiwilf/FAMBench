@@ -1,7 +1,7 @@
 
 
 LOG_PATH = "/home/ubuntu/repos/FAMBench/benchmarks/dlrm/ootb/"
-SETTING = 2
+SETTING = 3
 
 if SETTING == 1:
     LOG_FILE = "Losses_setting1_simplestNN_oss.txt"   
@@ -61,13 +61,36 @@ if SETTING == 2:
         "--use-fbgemm-gpu",
         ] 
 
-if SETTING == 22:
-    LOG_FILE = "Losses_setting1_simplestNN_oss.txt"
-    INT_FEATURE_COUNT = 13 #1 #13
-    CAT_FEATURE_COUNT = 26 #2
-    DAYS = 1#24
-
 if SETTING == 3:
+    LOG_FILE = "Losses_setting3_simplestNN_oss.txt"   
+    INT_FEATURE_COUNT = 1
+    CAT_FEATURE_COUNT = 1
+    DAYS = 1
+    ARGV = ["--data-generation=random",
+        "--data-set=terabyte", 
+        "--mini-batch-size=128", 
+        "--arch-embedding-size=16-16-16-16",
+        "--arch-mlp-bot=1-4", 
+        "--arch-mlp-top=1-1", 
+        "--arch-sparse-feature-size=4", 
+        "--learning-rate=1.0", 
+        "--num-batches=10", 
+        "--use-gpu", 
+        "--raw-data-file=/home/ubuntu/mountpoint/criteo_terabyte_subsample0.0_maxind40M/day", 
+        "--processed-data-file=/home/ubuntu/mountpoint/criteo_terabyte_subsample0.0_maxind40M/", 
+        "--memory-map", 
+        "--loss-function=bce", 
+        "--test-mini-batch-size=1", 
+        "--print-freq=1024", 
+        "--print-time", 
+        "--nepoch=1", 
+        "--max-ind-range=40000000", 
+        "--round-targets=True", 
+        "--test-num-workers=16", 
+        "--test-freq=30000", 
+    ]
+
+if SETTING == 33:
     LOG_FILE = "/home/ubuntu/repos/torchrec/examples/dlrm/Losses_day_0_single_sample_.txt"
     INT_FEATURE_COUNT = 13 #1 #13
     CAT_FEATURE_COUNT = 26 #2

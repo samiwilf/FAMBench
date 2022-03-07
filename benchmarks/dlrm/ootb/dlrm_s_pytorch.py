@@ -2202,6 +2202,14 @@ def run():
                         #lS_i = [torch.tensor([0],dtype=lS_i[0].dtype).to(device)]
                         X.flatten()[:]=1.0
                         T.flatten()[:]=1.0
+                    if SETTING == 3:
+                        for i in range(len(lS_i)):
+                            lS_i[i] = torch.arange(args.mini_batch_size,dtype=lS_o.dtype).to(device)
+                            for j in range(len(lS_i[i])):
+                                lS_i[i][j] = 16 * j // args.mini_batch_size 
+                        for i in range(len(lS_o)):
+                            for j in range(len(lS_o[i])):
+                                lS_o[i,j] = j
                     # forward pass
                     Z = dlrm_wrap(
                         X,
@@ -2591,4 +2599,5 @@ def run():
 
 
 if __name__ == "__main__":
+    print(f"RUNNING SETTING {SETTING}")
     run()
