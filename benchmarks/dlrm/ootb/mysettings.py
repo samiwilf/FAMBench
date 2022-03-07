@@ -1,7 +1,7 @@
 
 
 LOG_PATH = "/home/ubuntu/repos/FAMBench/benchmarks/dlrm/ootb/"
-SETTING = 3
+SETTING = 4
 
 if SETTING == 1:
     LOG_FILE = "Losses_setting1_simplestNN_oss.txt"   
@@ -90,20 +90,34 @@ if SETTING == 3:
         "--test-freq=30000", 
     ]
 
-if SETTING == 33:
-    LOG_FILE = "/home/ubuntu/repos/torchrec/examples/dlrm/Losses_day_0_single_sample_.txt"
+if SETTING == 4:
+    LOG_FILE = "s4_losses_day_0.txt"
     INT_FEATURE_COUNT = 13 #1 #13
     CAT_FEATURE_COUNT = 26 #2
     DAYS = 1#24   
-    ARGV = ['--pin_memory', 
-        '--batch_size', '2048', 
-        '--epochs', '1', 
-        '--num_embeddings_per_feature', '45833188,36746,17245,7413,20243,3,7114,1441,62,29275261,1572176,345138,10,2209,11267,128,4,974,14,48937457,11316796,40094537,452104,12606,104,35', 
-        '--embedding_dim', '128', 
-        '--dense_arch_layer_sizes', '512,256,128', 
-        '--over_arch_layer_sizes', '1024,1024,512,256,1', 
-        '--in_memory_binary_criteo_path', '/home/ubuntu/mountpoint/criteo_terabyte_subsample0.0_maxind40M', 
-        '--learning_rate', '1.0']         
+    ARGV = ["--data-generation=dataset",
+        "--data-set=terabyte", 
+        "--mini-batch-size=2048", 
+        #"--arch-embedding-size= this is read from file", 
+        "--arch-mlp-bot=13-512-256-128", 
+        "--arch-mlp-top=1024-1024-512-512-256-1", 
+        "--arch-sparse-feature-size=128", 
+        "--learning-rate=1.0", 
+        "--num-batches=10", 
+        "--use-gpu", 
+        "--raw-data-file=/home/ubuntu/mountpoint/criteo_terabyte_subsample0.0_maxind40M/day", 
+        "--processed-data-file=/home/ubuntu/mountpoint/criteo_terabyte_subsample0.0_maxind40M/", 
+        "--memory-map", 
+        "--loss-function=bce", 
+        "--test-mini-batch-size=1", 
+        "--print-freq=1024", 
+        "--print-time", 
+        "--nepoch=1", 
+        "--max-ind-range=40000000", 
+        "--round-targets=True", 
+        "--test-num-workers=16", 
+        "--test-freq=30000", 
+    ]        
 
 LOG_FILE = LOG_PATH + LOG_FILE
 
