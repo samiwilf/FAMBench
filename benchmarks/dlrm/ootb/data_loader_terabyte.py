@@ -3,8 +3,16 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-
 from __future__ import absolute_import, division, print_function, unicode_literals
+
+from mysettings import (
+    ARGV,
+    INT_FEATURE_COUNT,
+    CAT_FEATURE_COUNT,
+    DAYS,
+    SETTING,
+    LOG_FILE,
+)
 
 import os
 import numpy as np
@@ -98,10 +106,16 @@ def _batch_generator(
         )
 
         # print('Loading file: ', filepath)
-        with np.load(filepath) as data:
-            x_int = data["X_int"]
-            x_cat = data["X_cat"]
-            y = data["y"]
+        #with np.load(filepath) as data:
+        #    x_int = data["X_int"]
+        #    x_cat = data["X_cat"]
+        #    y = data["y"]
+        print("NUMPY FILES ARE LOADING  START!!!!!!!!")
+        x_int = np.load(filepath[:-4] + "_int.npy")
+        x_cat = np.load(filepath[:-4] + "_cat.npy")
+        y = np.load(filepath[:-4] + "_y.npy")
+        print("NUMPY FILES ARE LOADING  DONE!!!!!!!!!")
+
 
         samples_in_file = y.shape[0]
         batch_start_idx = 0

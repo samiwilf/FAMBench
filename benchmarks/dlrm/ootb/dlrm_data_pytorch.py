@@ -15,8 +15,16 @@
 #    ii) Criteo Terabyte Dataset
 #    https://labs.criteo.com/2013/12/download-terabyte-click-logs
 
-
 from __future__ import absolute_import, division, print_function, unicode_literals
+
+from mysettings import (
+    ARGV,
+    INT_FEATURE_COUNT,
+    CAT_FEATURE_COUNT,
+    DAYS,
+    SETTING,
+    LOG_FILE,
+)
 
 # others
 from os import path
@@ -503,20 +511,27 @@ def make_criteo_data_and_loaders(args, offset_to_length_converter=False):
                 args.memory_map,
                 args.dataset_multiprocessing
             )
-
+            if SETTING == 1:
+                days_l = list(range(1))
+            else:
+                days_l = list(range(23))
             train_loader = data_loader_terabyte.DataLoader(
                 data_directory=data_directory,
                 data_filename=data_filename,
-                days=list(range(23)),
+                days=days_l,
                 batch_size=args.mini_batch_size,
                 max_ind_range=args.max_ind_range,
                 split="train"
             )
 
+            if SETTING == 1:
+                days_l = [0]
+            else:
+                days_l = [23]
             test_loader = data_loader_terabyte.DataLoader(
                 data_directory=data_directory,
                 data_filename=data_filename,
-                days=[23],
+                days=days_l,
                 batch_size=args.test_mini_batch_size,
                 max_ind_range=args.max_ind_range,
                 split="test"

@@ -63,6 +63,15 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+from mysettings import (
+    ARGV,
+    INT_FEATURE_COUNT,
+    CAT_FEATURE_COUNT,
+    DAYS,
+    SETTING,
+    LOG_FILE,
+)
+
 import argparse
 
 # miscellaneous
@@ -527,17 +536,18 @@ class DLRM_Net(nn.Module):
             # custom Xavier input, output or two-sided fill
             mean = 0.0  # std_dev = np.sqrt(variance)
             std_dev = np.sqrt(2 / (m + n))  # np.sqrt(1 / m) # np.sqrt(1 / n)
+            np.random.seed(0)
             W = np.random.normal(mean, std_dev, size=(m, n)).astype(np.float32)
             std_dev = np.sqrt(1 / m)  # np.sqrt(2 / (m + 1))
             bt = np.random.normal(mean, std_dev, size=m).astype(np.float32)
             # approach 1
-            LL.weight.data = torch.tensor(W)
+            #LL.weight.data = torch.tensor(W)
             LL.weight.requires_grad = self.requires_grad
-            LL.bias.data = torch.tensor(bt)
+            #LL.bias.data = torch.tensor(bt)
             LL.bias.requires_grad = self.requires_grad
             # approach 2
-            # LL.weight.data.copy_(torch.tensor(W))
-            # LL.bias.data.copy_(torch.tensor(bt))
+            LL.weight.data.copy_(torch.tensor(W))
+            LL.bias.data.copy_(torch.tensor(bt))
             # approach 3
             # LL.weight = Parameter(torch.tensor(W),requires_grad=True)
             # LL.bias = Parameter(torch.tensor(bt),requires_grad=True)
@@ -545,6 +555,7 @@ class DLRM_Net(nn.Module):
 
             # construct sigmoid or relu operator
             if i == sigmoid_layer:
+                #pass
                 layers.append(nn.Sigmoid())
             else:
                 layers.append(nn.ReLU())
@@ -607,11 +618,12 @@ class DLRM_Net(nn.Module):
                 EE = nn.EmbeddingBag(n, m, mode="sum", sparse=True)
                 # initialize embeddings
                 # nn.init.uniform_(EE.weight, a=-np.sqrt(1 / n), b=np.sqrt(1 / n))
+                np.random.seed(0)
                 W = np.random.uniform(
                     low=-np.sqrt(1 / n), high=np.sqrt(1 / n), size=(n, m)
                 ).astype(np.float32)
                 # approach 1
-                EE.weight.data = torch.tensor(W, requires_grad=self.requires_grad)
+                EE.weight.data.copy_(torch.tensor(W, requires_grad=self.requires_grad))
                 # approach 2
                 # EE.weight.data.copy_(torch.tensor(W))
                 # approach 3
@@ -1133,6 +1145,7 @@ class DLRM_Net(nn.Module):
         return z0
 
     def print_weights(self):
+        print("emeddings")
         if self.use_fbgemm_gpu and len(self.fbgemm_emb_l):
             ntables_l = [
                 len(e.fbgemm_gpu_emb_bag.embedding_specs) for e in self.fbgemm_emb_l
@@ -1152,11 +1165,17 @@ class DLRM_Net(nn.Module):
         else:  # if self.emb_l:
             for param in self.emb_l.parameters():
                 print(param.detach().cpu().numpy())
+
+        print("weighted pooling")
         if isinstance(self.v_W_l, nn.ParameterList):
             for param in self.v_W_l.parameters():
                 print(param.detach().cpu().numpy())
+
+        print("bot_l")
         for param in self.bot_l.parameters():
             print(param.detach().cpu().numpy())
+
+        print("top_l")
         for param in self.top_l.parameters():
             print(param.detach().cpu().numpy())
 
@@ -1488,7 +1507,7 @@ def run():
     global nbatches
     global nbatches_test
     global writer
-    args = parser.parse_args()
+    args = parser.parse_args(ARGV)
 
     if args.dataset_multiprocessing:
         assert float(sys.version[:3]) > 3.7, (
@@ -2177,6 +2196,12 @@ def run():
 
                     mbs = T.shape[0]  # = args.mini_batch_size except maybe for last
 
+                    #lS_o = torch.tensor([[0]],dtype=lS_o.dtype).to(device)
+                    #lS_i = [torch.tensor([1],dtype=lS_i[0].dtype).to(device) for _ in range(3)]
+                    if SETTING == 1 or SETTING == 2:
+                        #lS_i = [torch.tensor([0],dtype=lS_i[0].dtype).to(device)]
+                        X.flatten()[:]=1.0
+                        T.flatten()[:]=1.0
                     # forward pass
                     Z = dlrm_wrap(
                         X,
@@ -2199,6 +2224,11 @@ def run():
                     # training accuracy is not disabled
                     # S = Z.detach().cpu().numpy()  # numpy array
                     # T = T.detach().cpu().numpy()  # numpy array
+
+                    losseslog = open(LOG_FILE, "a")
+                    line = str(E.detach().cpu().numpy().tolist()) + "\n"
+                    losseslog.write(line)
+                    losseslog.close()
 
                     # # print("res: ", S)
 
@@ -2256,7 +2286,7 @@ def run():
                             optimizer.zero_grad()
                         # backward pass
                         E.backward()
-
+                        
                         # optimizer
                         if (
                             args.mlperf_logging
