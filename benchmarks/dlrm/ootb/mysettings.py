@@ -119,7 +119,10 @@ if SETTING == 4:
         "--test-freq=30000", 
     ]        
 
-LOG_FILE = LOG_PATH + LOG_FILE
+import pathlib
+LOG_FILE = pathlib.Path(LOG_PATH + LOG_FILE)
+if LOG_FILE.is_file():
+    LOG_FILE.unlink()
 
     # simplest NN test
     #argv = ['--pin_memory', '--batch_size', '1', '--epochs', '1', '--num_embeddings_per_feature', '1', '--embedding_dim', '4', '--dense_arch_layer_sizes', '4', '--over_arch_layer_sizes', '1,1', '--in_memory_binary_criteo_path', '/home/ubuntu/mountpoint/criteo_terabyte_subsample0.0_maxind40M', '--learning_rate', '1.0']
