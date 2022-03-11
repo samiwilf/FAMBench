@@ -18,10 +18,11 @@ if SETTING == 1:
     LOG_FILE = "Losses_setting1_simplestNN_oss.txt"   
     INT_FEATURE_COUNT = 1
     DAYS = 1
+    EMB_DIM = 4
     ARGV = ["--data-generation=random",
         "--arch-embedding-size=1",
-        "--arch-sparse-feature-size=4", 
-        "--arch-mlp-bot=1-4", 
+        f"--arch-sparse-feature-size={EMB_DIM}", 
+        f"--arch-mlp-bot=1-{EMB_DIM}", 
         "--arch-mlp-top=1-1",         
         "--mini-batch-size=1", 
         "--num-batches=10", 
@@ -46,11 +47,12 @@ if SETTING == 2:
     LOG_FILE = "Losses_setting2_simplestNN_oss.txt"   
     INT_FEATURE_COUNT = 1
     DAYS = 1
+    EMB_DIM = 4
     ARGV = ["--data-generation=random",
-        "--arch-sparse-feature-size=4", 
+        f"--arch-sparse-feature-size={EMB_DIM}", 
         "--arch-embedding-size=1",
+        f"--arch-mlp-bot=1-{EMB_DIM}", 
         "--arch-mlp-top=1-1", 
-        "--arch-mlp-bot=1-4", 
         "--mini-batch-size=8388608",
         "--num-batches=10", 
         "--use-gpu", 
@@ -76,11 +78,12 @@ if SETTING == 3:
     LOG_FILE = "s3_oss.txt"   
     INT_FEATURE_COUNT = 1
     DAYS = 1
+    EMB_DIM = 128
     ARGV = [
         "--mini-batch-size=2048", 
-        "--arch-sparse-feature-size=128", 
+        f"--arch-sparse-feature-size={EMB_DIM}", 
         "--arch-embedding-size=4538-346-175",
-        "--arch-mlp-bot=1-512-256-128", 
+        f"--arch-mlp-bot=1-512-256-{EMB_DIM}", 
         "--arch-mlp-top=1024-1024-512-256-1",
         "--data-generation=random",
         "--learning-rate=1.0", 
@@ -109,14 +112,15 @@ if SETTING == 4:
     LOG_FILE = "s4.txt"
     INT_FEATURE_COUNT = 13
     CAT_FEATURE_COUNT = 26
-    DAYS = 1#24   
+    DAYS = 1#24
+    EMB_DIM = 128
     ARGV = ["--data-generation=dataset",
         "--data-set=terabyte", 
         "--mini-batch-size=2048", 
         #"--arch-embedding-size= this is read from file", 
-        "--arch-mlp-bot=13-512-256-128", 
+        f"--arch-mlp-bot=13-512-256-{EMB_DIM}", 
         "--arch-mlp-top=1024-1024-512-256-1", 
-        "--arch-sparse-feature-size=128", 
+        f"--arch-sparse-feature-size={EMB_DIM}", 
         "--learning-rate=1.0", 
         "--num-batches=50", 
         "--use-gpu", 
