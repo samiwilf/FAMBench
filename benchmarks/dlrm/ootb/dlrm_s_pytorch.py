@@ -63,6 +63,7 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import mysettings
 from mysettings import (
     ARGV,
     INT_FEATURE_COUNT,
@@ -177,7 +178,7 @@ exc = getattr(builtins, "IOError", "FileNotFoundError")
 
 
 def SAVE_DEBUG_DATA(t, FILE):
-    if SAVE_DEBUG_DATA:
+    if mysettings.SAVE_DEBUG_DATA:
         try:
             t = torch.trunc(t.flatten().detach().cpu()*1000)
             log = open(FILE, "a")

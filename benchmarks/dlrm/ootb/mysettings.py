@@ -1,12 +1,12 @@
 import pathlib
 
 LOG_PATH = "/home/ubuntu/repos/FAMBench/benchmarks/dlrm/ootb/"
-SETTING = 3
+SETTING = 4
 print('*'.center(40, '*'))
 print(f"  RUNNING SETTING {SETTING}  ".center(40, '*'))
 print('*'.center(40, '*'))
 
-SAVE_DEBUG_DATA = True if SETTING != 5 else False
+SAVE_DEBUG_DATA = True
 
 DENSE_LOG_FILE = pathlib.Path(LOG_PATH + "s" + str(SETTING) + "_DENSE.txt")
 SPARSE_LOG_FILE = pathlib.Path(LOG_PATH + "s" + str(SETTING) + "_SPARSE.txt")
@@ -104,9 +104,10 @@ if SETTING == 3:
     ]
 
 if SETTING == 4:
-    LOG_FILE = "s4_losses_day_0.txt"
-    INT_FEATURE_COUNT = 13 #1 #13
-    CAT_FEATURE_COUNT = 26 #2
+    SAVE_DEBUG_DATA = False
+    LOG_FILE = "s4.txt"
+    INT_FEATURE_COUNT = 13
+    CAT_FEATURE_COUNT = 26
     DAYS = 1#24   
     ARGV = ["--data-generation=dataset",
         "--data-set=terabyte", 
