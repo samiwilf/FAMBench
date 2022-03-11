@@ -1,7 +1,7 @@
 import pathlib
 
 LOG_PATH = "/home/ubuntu/repos/FAMBench/benchmarks/dlrm/ootb/"
-SETTING = 4
+SETTING = 3
 print('*'.center(40, '*'))
 print(f"  RUNNING SETTING {SETTING}  ".center(40, '*'))
 print('*'.center(40, '*'))
@@ -72,18 +72,19 @@ if SETTING == 2:
         ] 
 
 if SETTING == 3:
+    SAVE_DEBUG_DATA = False
     LOG_FILE = "s3_oss.txt"   
     INT_FEATURE_COUNT = 1
     DAYS = 1
     ARGV = [
         "--mini-batch-size=2048", 
         "--arch-sparse-feature-size=128", 
-        "--arch-embedding-size=45833188-36746-17245",
+        "--arch-embedding-size=4538-346-175",
         "--arch-mlp-bot=1-512-256-128", 
         "--arch-mlp-top=1024-1024-512-256-1",
         "--data-generation=random",
         "--learning-rate=1.0", 
-        "--num-batches=10", 
+        "--num-batches=50", 
         "--use-gpu", 
         #"--use-torch2trt-for-mlp",
         #"--inference-only",
@@ -117,13 +118,13 @@ if SETTING == 4:
         "--arch-mlp-top=1024-1024-512-256-1", 
         "--arch-sparse-feature-size=128", 
         "--learning-rate=1.0", 
-        "--num-batches=10", 
+        "--num-batches=50", 
         "--use-gpu", 
         "--raw-data-file=/home/ubuntu/mountpoint/criteo_terabyte_subsample0.0_maxind40M/day", 
         "--processed-data-file=/home/ubuntu/mountpoint/criteo_terabyte_subsample0.0_maxind40M/", 
         "--memory-map", 
         "--loss-function=bce", 
-        "--test-mini-batch-size=1", 
+        "--test-mini-batch-size=16384", 
         "--print-freq=1024", 
         "--print-time", 
         "--nepoch=1", 
