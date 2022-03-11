@@ -70,6 +70,12 @@ from mysettings import (
     DAYS,
     SETTING,
     LOG_FILE,
+    DENSE_LOG_FILE,
+    SPARSE_LOG_FILE,
+    D_OUT_LOG_FILE,
+    E_OUT_LOG_FILE,
+    C_OUT_LOG_FILE,
+    SAVE_DEBUG_DATA,
 )
 
 import argparse
@@ -168,6 +174,22 @@ with warnings.catch_warnings():
 # from torch.nn.parameter import Parameter
 
 exc = getattr(builtins, "IOError", "FileNotFoundError")
+
+
+def SAVE_DEBUG_DATA(t, FILE):
+    if SAVE_DEBUG_DATA:
+        try:
+            t = torch.trunc(t.flatten().detach().cpu()*1000)
+            log = open(FILE, "a")
+            line = t.shape.__repr__() + "\n"
+            log.write(line)
+            line = '\n'.join([str(x) for x in t.flatten().detach().cpu().numpy().tolist()]) + "\n\n"
+            log.write(line)
+            log.close()
+        except:
+            pass
+
+
 
 
 def time_wrap(use_gpu):
@@ -542,15 +564,15 @@ class DLRM_Net(nn.Module):
             bt = np.random.normal(mean, std_dev, size=m).astype(np.float32)
             # approach 1
             #LL.weight.data = torch.tensor(W)
-            LL.weight.requires_grad = self.requires_grad
             #LL.bias.data = torch.tensor(bt)
-            LL.bias.requires_grad = self.requires_grad
             # approach 2
             LL.weight.data.copy_(torch.tensor(W))
             LL.bias.data.copy_(torch.tensor(bt))
             # approach 3
             # LL.weight = Parameter(torch.tensor(W),requires_grad=True)
             # LL.bias = Parameter(torch.tensor(bt),requires_grad=True)
+            LL.weight.requires_grad = self.requires_grad
+            LL.bias.requires_grad = self.requires_grad
             layers.append(LL)
 
             # construct sigmoid or relu operator
@@ -1019,6 +1041,10 @@ class DLRM_Net(nn.Module):
         return z
 
     def sequential_forward(self, dense_x, lS_o, lS_i):
+
+        SAVE_DEBUG_DATA(dense_x, DENSE_LOG_FILE)
+        SAVE_DEBUG_DATA(torch.stack(lS_i), SPARSE_LOG_FILE)
+
         # process dense features (using bottom mlp), resulting in a row vector
         x = self.apply_mlp(dense_x, self.bot_l)
         # debug prints
@@ -1030,9 +1056,14 @@ class DLRM_Net(nn.Module):
         # for y in ly:
         #     print(y.detach().cpu().numpy())
 
+        SAVE_DEBUG_DATA(x, D_OUT_LOG_FILE)
+        SAVE_DEBUG_DATA(torch.stack(ly), E_OUT_LOG_FILE)
+
         # interact features (dense and sparse)
         z = self.interact_features(x, ly)
         # print(z.detach().cpu().numpy())
+
+        SAVE_DEBUG_DATA(z, C_OUT_LOG_FILE)
 
         # quantize top mlp's input to fp16 if PyTorch's built-in fp16 quantization is used.
         if self.quantize_mlp_input_with_half_call:
@@ -2196,6 +2227,10 @@ def run():
 
                     mbs = T.shape[0]  # = args.mini_batch_size except maybe for last
 
+                    BATCH_SIZE = mbs
+                    CAT_FEATURE_COUNT = dlrm.ntables
+                    LN_EMB = ln_emb
+
                     #lS_o = torch.tensor([[0]],dtype=lS_o.dtype).to(device)
                     #lS_i = [torch.tensor([1],dtype=lS_i[0].dtype).to(device) for _ in range(3)]
                     if SETTING == 1 or SETTING == 2:
@@ -2203,10 +2238,25 @@ def run():
                         X.flatten()[:]=1.0
                         T.flatten()[:]=1.0
                     if SETTING == 3:
-                        for i in range(len(lS_i)):
-                            lS_i[i] = torch.arange(args.mini_batch_size,dtype=lS_o.dtype).to(device)
-                            for j in range(len(lS_i[i])):
-                                lS_i[i][j] = 16 * j // args.mini_batch_size 
+                        X.flatten()[:]=1.0
+                        #X = torch.arange(mbs).unsqueeze(1).float()
+                        T.flatten()[:]=1.0
+                        #(# of emb tables, batch size)                        
+                        #lS_i = torch.stack([ (torch.arange(dlrm.ntables, dtype=lS_i[0].dtype).to(device) + _) % mbs for _ in range(mbs)]) 
+                        #lS_i = torch.stack([torch.zeros((dlrm.ntables), dtype=lS_i[0].dtype).to(device) for _ in range(mbs)]) 
+                        #lS_i = torch.transpose(lS_i, 0, 1)
+
+                        np.random.seed(0)
+                        r = np.random.uniform(0.0, 0.99, size=(BATCH_SIZE, CAT_FEATURE_COUNT))
+                        for i in range(BATCH_SIZE):
+                            for j in range(CAT_FEATURE_COUNT):
+                                r[i,j] = r[i,j] * LN_EMB[j]                        
+                        r = np.trunc(r).astype(np.int32)
+                        r = r.transpose()
+
+                        lS_i = [torch.tensor(c) for c in r]
+                        lS_o = torch.stack(lS_i).clone()
+
                         for i in range(len(lS_o)):
                             for j in range(len(lS_o[i])):
                                 lS_o[i,j] = j

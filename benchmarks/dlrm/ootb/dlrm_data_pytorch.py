@@ -17,6 +17,7 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import mysettings
 from mysettings import (
     ARGV,
     INT_FEATURE_COUNT,
@@ -102,7 +103,7 @@ class CriteoDataset(Dataset):
         data_ready = True
         if memory_map:
             for i in range(days):
-                reo_data = self.npzfile + "_{0}_reordered.npz".format(i)
+                reo_data = self.npzfile + "_{}_reordered.npz".format(i)
                 if not path.exists(str(reo_data)):
                     data_ready = False
         else:
@@ -511,7 +512,7 @@ def make_criteo_data_and_loaders(args, offset_to_length_converter=False):
                 args.memory_map,
                 args.dataset_multiprocessing
             )
-            if SETTING == 1:
+            if mysettings.DAYS == 1:
                 days_l = list(range(1))
             else:
                 days_l = list(range(23))
@@ -524,7 +525,7 @@ def make_criteo_data_and_loaders(args, offset_to_length_converter=False):
                 split="train"
             )
 
-            if SETTING == 1:
+            if mysettings.DAYS == 1:
                 days_l = [0]
             else:
                 days_l = [23]
