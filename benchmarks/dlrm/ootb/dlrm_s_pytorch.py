@@ -2243,12 +2243,7 @@ def run():
                         T.flatten()[:]=1.0
                     if SETTING == 3:
                         X.flatten()[:]=1.0
-                        #X = torch.arange(mbs).unsqueeze(1).float()
                         T.flatten()[:]=1.0
-                        #(# of emb tables, batch size)                        
-                        #lS_i = torch.stack([ (torch.arange(dlrm.ntables, dtype=lS_i[0].dtype).to(device) + _) % mbs for _ in range(mbs)]) 
-                        #lS_i = torch.stack([torch.zeros((dlrm.ntables), dtype=lS_i[0].dtype).to(device) for _ in range(mbs)]) 
-                        #lS_i = torch.transpose(lS_i, 0, 1)
 
                         np.random.seed(0)
                         r = np.random.uniform(0.0, 0.99, size=(BATCH_SIZE, CAT_FEATURE_COUNT))
