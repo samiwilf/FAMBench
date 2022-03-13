@@ -2287,7 +2287,7 @@ def run():
                     # S = Z.detach().cpu().numpy()  # numpy array
                     # T = T.detach().cpu().numpy()  # numpy array
 
-                    if mysettings.SAVE_DEBUG_DATA:
+                    if mysettings.SAVE_LOSSES:
                         losseslog = open(LOG_FILE, "a")
                         line = str(E.detach().cpu().numpy().tolist()) + "\n"
                         losseslog.write(line)

@@ -6,7 +6,8 @@ print('*'.center(40, '*'))
 print(f"  RUNNING SETTING {SETTING}  ".center(40, '*'))
 print('*'.center(40, '*'))
 
-SAVE_DEBUG_DATA = True
+SAVE_DEBUG_DATA = True #Default that's overridable by specific settings below.
+SAVE_LOSSES = True #Default that's overridable by specific settings below.
 
 DENSE_LOG_FILE = pathlib.Path(LOG_PATH + "s" + str(SETTING) + "_DENSE.txt")
 SPARSE_LOG_FILE = pathlib.Path(LOG_PATH + "s" + str(SETTING) + "_SPARSE.txt")
@@ -133,13 +134,13 @@ if SETTING == 4:
         "--print-time", 
         "--nepoch=1", 
         "--max-ind-range=40000000", 
-        "--round-targets=True", 
         "--test-num-workers=16", 
         "--test-freq=30000", 
     ]
 if SETTING == 5:
     SAVE_DEBUG_DATA = False
-    LOG_FILE = "s4.txt"
+    SAVE_LOSSES = False
+    LOG_FILE = "s5.txt"
     INT_FEATURE_COUNT = 13
     CAT_FEATURE_COUNT = 26
     DAYS = 24
