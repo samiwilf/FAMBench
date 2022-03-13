@@ -1539,6 +1539,7 @@ def run():
     global nbatches
     global nbatches_test
     global writer
+    print(ARGV)
     args = parser.parse_args(ARGV)
 
     if args.dataset_multiprocessing:
@@ -2286,10 +2287,11 @@ def run():
                     # S = Z.detach().cpu().numpy()  # numpy array
                     # T = T.detach().cpu().numpy()  # numpy array
 
-                    losseslog = open(LOG_FILE, "a")
-                    line = str(E.detach().cpu().numpy().tolist()) + "\n"
-                    losseslog.write(line)
-                    losseslog.close()
+                    if mysettings.SAVE_DEBUG_DATA:
+                        losseslog = open(LOG_FILE, "a")
+                        line = str(E.detach().cpu().numpy().tolist()) + "\n"
+                        losseslog.write(line)
+                        losseslog.close()
 
                     # # print("res: ", S)
 
