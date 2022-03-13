@@ -1,7 +1,7 @@
 import pathlib
 
 LOG_PATH = "/home/ubuntu/repos/FAMBench/benchmarks/dlrm/ootb/"
-SETTING = 3
+SETTING = 5
 print('*'.center(40, '*'))
 print(f"  RUNNING SETTING {SETTING}  ".center(40, '*'))
 print('*'.center(40, '*'))
@@ -137,6 +137,34 @@ if SETTING == 4:
         "--test-num-workers=16", 
         "--test-freq=30000", 
     ]
+if SETTING == 5:
+    SAVE_DEBUG_DATA = False
+    LOG_FILE = "s4.txt"
+    INT_FEATURE_COUNT = 13
+    CAT_FEATURE_COUNT = 26
+    DAYS = 24
+    EMB_DIM = 128
+    ARGV = ["--data-generation=dataset",
+        "--data-set=terabyte", 
+        "--mini-batch-size=2048", 
+        #"--arch-embedding-size= this is read from file", 
+        f"--arch-mlp-bot=13-512-256-{EMB_DIM}", 
+        "--arch-mlp-top=1024-1024-512-256-1", 
+        f"--arch-sparse-feature-size={EMB_DIM}", 
+        "--learning-rate=1.0", 
+        "--use-gpu", 
+        "--raw-data-file=/home/ubuntu/mountpoint/criteo_terabyte_subsample0.0_maxind40M/day", 
+        "--processed-data-file=/home/ubuntu/mountpoint/criteo_terabyte_subsample0.0_maxind40M/", 
+        "--memory-map", 
+        "--loss-function=bce", 
+        "--test-mini-batch-size=16384", 
+        "--print-freq=1024", 
+        "--print-time", 
+        "--nepoch=1", 
+        "--max-ind-range=40000000", 
+        "--test-num-workers=16", 
+        "--test-freq=30000", 
+    ]        
 
 for a in ARGV:
     if "--arch-embedding-size" in a:
