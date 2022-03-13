@@ -2000,11 +2000,11 @@ def run():
 
         parameters = (
             dlrm.parameters()
-            if ext_dist.my_size == 1
+            if False #ext_dist.my_size == 1
             else [
                 {
                     "params": [
-                        p
+                        Parameter(p.data)
                         for emb in (
                             [e.fbgemm_gpu_emb_bag for e in dlrm.fbgemm_emb_l]
                             if use_fbgemm_gpu
@@ -2012,7 +2012,9 @@ def run():
                             if dlrm.quantize_bits != 32
                             else dlrm.emb_l
                         )
-                        for p in emb.parameters()
+                        for p in (emb.split_embedding_weights()
+                        if use_fbgemm_gpu
+                        else emb.parameters())
                     ],
                     "lr": args.learning_rate,
                 },
@@ -2299,7 +2301,7 @@ def run():
                     with record_function("DLRM backward"):
                         # Update optimizer parameters to train weights instantiated lazily in
                         # the parallel_forward call.
-                        if dlrm.ndevices_available > 1 and dlrm.add_new_weights_to_params:
+                        if dlrm.ndevices_available > 1 and dlrm.add_new_weights_to_params and False:
 
                             # Pop any prior extra parameters. Priors may exist because
                             # self.parallel_model_is_not_prepared is set back to True
