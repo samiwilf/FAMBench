@@ -105,7 +105,7 @@ def _batch_generator(
             data_filename + "_{}_reordered.npz".format(day)
         )
 
-        # print('Loading file: ', filepath)
+        print('Loading file: ', filepath)
         #with np.load(filepath) as data:
         #    x_int = data["X_int"]
         #    x_cat = data["X_cat"]
