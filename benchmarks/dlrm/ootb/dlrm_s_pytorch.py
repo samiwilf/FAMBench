@@ -1046,7 +1046,7 @@ class DLRM_Net(nn.Module):
     def sequential_forward(self, dense_x, lS_o, lS_i):
 
         SAVE_DEBUG_DATA(dense_x, DENSE_LOG_FILE)
-        SAVE_DEBUG_DATA(torch.stack(lS_i), SPARSE_LOG_FILE)
+        SAVE_DEBUG_DATA(lS_i if isinstance(lS_i, torch.Tensor) else torch.stack(lS_i), SPARSE_LOG_FILE)
 
         # process dense features (using bottom mlp), resulting in a row vector
         x = self.apply_mlp(dense_x, self.bot_l)
@@ -1060,7 +1060,7 @@ class DLRM_Net(nn.Module):
         #     print(y.detach().cpu().numpy())
 
         SAVE_DEBUG_DATA(x, D_OUT_LOG_FILE)
-        SAVE_DEBUG_DATA(torch.stack(ly), E_OUT_LOG_FILE)
+        SAVE_DEBUG_DATA(ly if isinstance(ly, torch.Tensor) else torch.stack(ly), E_OUT_LOG_FILE)
 
         # interact features (dense and sparse)
         z = self.interact_features(x, ly)
@@ -2281,7 +2281,8 @@ def run():
                     # training accuracy is not disabled
                     # S = Z.detach().cpu().numpy()  # numpy array
                     # T = T.detach().cpu().numpy()  # numpy array
-
+                    
+                    #print("Loss " + str(E.detach().cpu().numpy().tolist()))
                     if mysettings.SAVE_LOSSES:
                         losseslog = open(LOG_FILE, "a")
                         line = str(E.detach().cpu().numpy().tolist()) + "\n"

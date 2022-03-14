@@ -98,6 +98,9 @@ def _transform_features(
 def _batch_generator(
         data_filename, data_directory, days, batch_size, split, drop_last, max_ind_range
 ):
+    print("\nPRINT DAYS LIST!\n")
+    print(days)
+    print("\nPRINT DAYS LIST DONE!\n\n")
     previous_file = None
     for day in days:
         filepath = os.path.join(
