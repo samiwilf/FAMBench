@@ -1,7 +1,7 @@
 import pathlib
 
 LOG_PATH = "/home/ubuntu/repos/FAMBench/benchmarks/dlrm/ootb/"
-SETTING = 5
+SETTING = 3
 print('*'.center(40, '*'))
 print(f"  RUNNING SETTING {SETTING}  ".center(40, '*'))
 print('*'.center(40, '*'))
@@ -76,7 +76,7 @@ if SETTING == 2:
 
 if SETTING == 3:
     SAVE_DEBUG_DATA = False
-    LOG_FILE = "s3_oss.txt"   
+    LOG_FILE = "s3.txt"   
     INT_FEATURE_COUNT = 1
     DAYS = 1
     EMB_DIM = 128
@@ -88,11 +88,11 @@ if SETTING == 3:
         "--arch-mlp-top=1024-1024-512-256-1",
         "--data-generation=random",
         "--learning-rate=1.0", 
-        "--num-batches=50", 
+        "--num-batches=10", 
         "--use-gpu", 
         #"--use-torch2trt-for-mlp",
         #"--inference-only",
-        #"--use-fbgemm-gpu", 
+        "--use-fbgemm-gpu", 
         "--loss-function=bce", 
         "--nepoch=1", 
         "--max-ind-range=40000000", 
