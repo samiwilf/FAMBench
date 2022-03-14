@@ -90,6 +90,7 @@ if SETTING == 3:
         "--learning-rate=1.0", 
         "--num-batches=10", 
         "--use-gpu", 
+        "--weighted-pooling=learned",
         #"--use-torch2trt-for-mlp",
         #"--inference-only",
         "--use-fbgemm-gpu", 

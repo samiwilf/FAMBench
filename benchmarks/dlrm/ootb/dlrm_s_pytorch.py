@@ -2024,7 +2024,7 @@ def run():
                         for p in (emb.split_embedding_weights()
                         if use_fbgemm_gpu
                         else emb.parameters())
-                    ] + dlrm.v_W_l if dlrm.weighted_pooling == "learned" else [],
+                    ] + list(dlrm.v_W_l) if dlrm.weighted_pooling == "learned" else [],
                     "lr": args.learning_rate,
                     "lazy_params": True,
                 },                
@@ -2248,7 +2248,7 @@ def run():
                         for i in range(BATCH_SIZE):
                             for j in range(CAT_FEATURE_COUNT):
                                 r[i,j] = r[i,j] * LN_EMB[j]                        
-                        r = np.trunc(r).astype(np.int32)
+                        r = np.trunc(r).astype(np.int64)
                         r = r.transpose()
 
                         lS_i = [torch.tensor(c) for c in r]
@@ -2312,7 +2312,7 @@ def run():
                             if dlrm.weighted_pooling == "learned":
                                 lazy_params.extend(
                                     nn.ParameterList(
-                                        [Parameter(p) for p_l in dlrm.v_W_l_l for p in p_l]
+                                        [Parameter(p) for p in dlrm.v_W_l]
                                     )
                                 )
                             if dlrm.use_fbgemm_gpu:
