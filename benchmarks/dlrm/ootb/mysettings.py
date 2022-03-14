@@ -1,12 +1,12 @@
 import pathlib
 
 LOG_PATH = "/home/ubuntu/repos/FAMBench/benchmarks/dlrm/ootb/"
-SETTING = 5
+SETTING = 3
 print('*'.center(40, '*'))
 print(f"  RUNNING SETTING {SETTING}  ".center(40, '*'))
 print('*'.center(40, '*'))
 
-SAVE_DEBUG_DATA = True #Default that's overridable by specific settings below.
+SAVE_DEBUG_DATA = False #Default that's overridable by specific settings below.
 SAVE_LOSSES = True #Default that's overridable by specific settings below.
 
 DENSE_LOG_FILE = pathlib.Path(LOG_PATH + "s" + str(SETTING) + "_DENSE.txt")
@@ -76,24 +76,25 @@ if SETTING == 2:
 
 if SETTING == 3:
     SAVE_DEBUG_DATA = False
-    LOG_FILE = "s3_oss.txt"   
+    LOG_FILE = "s3.txt"   
     INT_FEATURE_COUNT = 1
     DAYS = 1
     EMB_DIM = 128
     ARGV = [
         "--mini-batch-size=2048", 
         f"--arch-sparse-feature-size={EMB_DIM}", 
-        "--arch-embedding-size=4538-346-175",
+        "--arch-embedding-size=538-346-175",
         f"--arch-mlp-bot=1-512-256-{EMB_DIM}", 
-        "--arch-mlp-top=1024-1024-512-256-1",
+        "--arch-mlp-top=1-1-1",
         "--data-generation=random",
         "--learning-rate=1.0", 
-        "--num-batches=50", 
+        "--num-batches=10", 
         "--use-gpu", 
         #"--use-torch2trt-for-mlp",
         #"--inference-only",
-        #"--use-fbgemm-gpu", 
-        "--loss-function=bce", 
+        "--weighted-pooling=learned",
+        "--use-fbgemm-gpu", 
+        "--loss-function=bce",
         "--nepoch=1", 
         "--max-ind-range=40000000", 
         "--round-targets=True", 
@@ -102,7 +103,7 @@ if SETTING == 3:
         "--processed-data-file=/home/ubuntu/mountpoint/criteo_terabyte_subsample0.0_maxind40M/", 
         "--memory-map", 
         "--data-set=terabyte", 
-        "--print-freq=1024", 
+        "--print-freq=1", 
         "--print-time", 
         "--test-mini-batch-size=1", 
         "--test-freq=30000", 

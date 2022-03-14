@@ -366,7 +366,7 @@ def create_fbgemm_gpu_emb_bag(
         emb_location = split_table_batched_embeddings_ops.EmbeddingLocation.HOST
         compute_device = split_table_batched_embeddings_ops.ComputeDevice.CPU
     else:
-        emb_location = split_table_batched_embeddings_ops.EmbeddingLocation.DEVICE
+        emb_location = split_table_batched_embeddings_ops.EmbeddingLocation.MANAGED_CACHING
         compute_device = split_table_batched_embeddings_ops.ComputeDevice.CUDA
     pooling_mode = PoolingMode.SUM
     cache_algorithm = CacheAlgorithm.LRU
@@ -408,6 +408,7 @@ def create_fbgemm_gpu_emb_bag(
             weights = fbgemm_gpu_emb_bag.split_embedding_weights()
             for i, emb in enumerate(weights):
                 emb.data.copy_(emb_l[i])
+                emb.data.requires_grad = requires_grad
 
         elif quantize_type == quantize_type.INT8:
             # copy quantized values upsampled/recasted to FP32
@@ -448,6 +449,7 @@ def create_fbgemm_gpu_emb_bag(
         weights = fbgemm_gpu_emb_bag.split_embedding_weights()
         for i, emb in enumerate(weights):
             emb.data.copy_(emb_l[i])
+            emb.data.requires_grad = requires_grad
 
     if not requires_grad:
         torch.no_grad()
@@ -1999,10 +2001,19 @@ def run():
             else torch.optim.Adagrad,
         }
 
+        print(f"ext_dist.my_size {ext_dist.my_size}")
+
         parameters = (
             dlrm.parameters()
             if False #ext_dist.my_size == 1
             else [
+                {
+                    "params": 
+                        list(dlrm.bot_l.parameters()) + list(dlrm.top_l.parameters()) +
+                        [Parameter(p) for p_l in dlrm.v_W_l_l for p in p_l]
+                        if dlrm.weighted_pooling == "learned" else [],
+                    "lr": args.learning_rate,
+                },    
                 {
                     "params": [
                         Parameter(p.data)
@@ -2018,17 +2029,7 @@ def run():
                         else emb.parameters())
                     ],
                     "lr": args.learning_rate,
-                },
-                # TODO check this lr setup
-                # bottom mlp has no data parallelism
-                # need to check how do we deal with top mlp
-                {
-                    "params": dlrm.bot_l.parameters(),
-                    "lr": args.learning_rate,
-                },
-                {
-                    "params": dlrm.top_l.parameters(),
-                    "lr": args.learning_rate,
+                    "lazy_params": True
                 },
             ]
         )
@@ -2250,7 +2251,7 @@ def run():
                         for i in range(BATCH_SIZE):
                             for j in range(CAT_FEATURE_COUNT):
                                 r[i,j] = r[i,j] * LN_EMB[j]                        
-                        r = np.trunc(r).astype(np.int32)
+                        r = np.trunc(r).astype(np.int64)
                         r = r.transpose()
 
                         lS_i = [torch.tensor(c) for c in r]
@@ -2298,7 +2299,7 @@ def run():
                     with record_function("DLRM backward"):
                         # Update optimizer parameters to train weights instantiated lazily in
                         # the parallel_forward call.
-                        if dlrm.ndevices_available > 1 and dlrm.add_new_weights_to_params and False:
+                        if dlrm.ndevices_available > 1 and dlrm.add_new_weights_to_params and True:
 
                             # Pop any prior extra parameters. Priors may exist because
                             # self.parallel_model_is_not_prepared is set back to True
@@ -2312,20 +2313,16 @@ def run():
                             # and add it to the trainable params list.
                             lazy_params = nn.ParameterList()
                             if dlrm.weighted_pooling == "learned":
-                                lazy_params.extend(
-                                    nn.ParameterList(
-                                        [p for p_l in dlrm.v_W_l_l for p in p_l]
-                                    )
+                                lazy_params.extend(                                    
+                                    [Parameter(p) for p_l in dlrm.v_W_l_l for p in p_l]
                                 )
                             if dlrm.use_fbgemm_gpu:
                                 lazy_params.extend(
-                                    nn.ParameterList(
-                                        [
-                                            emb
-                                            for emb_ in dlrm.fbgemm_emb_l
-                                            for emb in emb_.fbgemm_gpu_emb_bag.parameters()
-                                        ]
-                                    )
+                                    [
+                                        Parameter(emb.data)
+                                        for emb_ in dlrm.fbgemm_emb_l
+                                        for emb in emb_.fbgemm_gpu_emb_bag.split_embedding_weights()
+                                    ]
                                 )
                             lazy_params_dict = optimizer.param_groups[0]
                             lazy_params_dict["lazy_params"] = True
@@ -2344,7 +2341,8 @@ def run():
                             optimizer.zero_grad()
                         # backward pass
                         E.backward()
-                        
+                        #print(list(dlrm.named_parameters())[3][1].grad)
+                        #print([[t.device for t in grp['params']] for grp in optimizer.param_groups])
                         # optimizer
                         if (
                             args.mlperf_logging
