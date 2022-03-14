@@ -83,14 +83,14 @@ if SETTING == 3:
     ARGV = [
         "--mini-batch-size=2048", 
         f"--arch-sparse-feature-size={EMB_DIM}", 
-        "--arch-embedding-size=538-346-175",
-        f"--arch-mlp-bot=1-1-256-{EMB_DIM}", 
-        "--arch-mlp-top=1-1-1-256-1",
+        "--arch-embedding-size=4538-346-175",
+        f"--arch-mlp-bot=1-512-256-{EMB_DIM}", 
+        "--arch-mlp-top=1024-1024-512-256-1",
         "--data-generation=random",
         "--learning-rate=1.0", 
         "--num-batches=10", 
         "--use-gpu", 
-        "--weighted-pooling=learned",
+        #"--weighted-pooling=learned",
         #"--use-torch2trt-for-mlp",
         #"--inference-only",
         "--use-fbgemm-gpu", 
@@ -201,3 +201,16 @@ for f in [LOG_FILE, DENSE_LOG_FILE, SPARSE_LOG_FILE, D_OUT_LOG_FILE, E_OUT_LOG_F
 
     # real run, but using Shabab's 1tb_numpy data
     #argv = ['--pin_memory', '--batch_size', '2048', '--epochs', '1', '--num_embeddings_per_feature', '45833188,36746,17245,7413,20243,3,7114,1441,62,29275261,1572176,345138,10,2209,11267,128,4,974,14,48937457,11316796,40094537,452104,12606,104,35', '--embedding_dim', '128', '--dense_arch_layer_sizes', '512,256,128', '--over_arch_layer_sizes', '1024,1024,512,256,1', '--in_memory_binary_criteo_path', '/home/ubuntu/mountpoint/criteo/1tb_numpy/', '--learning_rate', '1.0']
+
+"""
+0.49483248591423035
+0.0011152884690091014
+0.001026919111609459
+0.0009506093338131905
+0.0008840291993692517
+0.0008255671127699316
+0.0007738483836874366
+0.0007277392433024943
+0.0006864042370580137
+0.0006492455140687525
+"""

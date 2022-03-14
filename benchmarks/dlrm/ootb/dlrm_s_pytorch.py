@@ -366,7 +366,7 @@ def create_fbgemm_gpu_emb_bag(
         emb_location = split_table_batched_embeddings_ops.EmbeddingLocation.HOST
         compute_device = split_table_batched_embeddings_ops.ComputeDevice.CPU
     else:
-        emb_location = split_table_batched_embeddings_ops.EmbeddingLocation.DEVICE
+        emb_location = split_table_batched_embeddings_ops.EmbeddingLocation.MANAGED_CACHING
         compute_device = split_table_batched_embeddings_ops.ComputeDevice.CUDA
     pooling_mode = PoolingMode.SUM
     cache_algorithm = CacheAlgorithm.LRU
@@ -408,6 +408,7 @@ def create_fbgemm_gpu_emb_bag(
             weights = fbgemm_gpu_emb_bag.split_embedding_weights()
             for i, emb in enumerate(weights):
                 emb.data.copy_(emb_l[i])
+                emb.data.requires_grad = requires_grad
 
         elif quantize_type == quantize_type.INT8:
             # copy quantized values upsampled/recasted to FP32
@@ -448,6 +449,7 @@ def create_fbgemm_gpu_emb_bag(
         weights = fbgemm_gpu_emb_bag.split_embedding_weights()
         for i, emb in enumerate(weights):
             emb.data.copy_(emb_l[i])
+            emb.data.requires_grad = requires_grad
 
     if not requires_grad:
         torch.no_grad()
@@ -2296,7 +2298,7 @@ def run():
                     with record_function("DLRM backward"):
                         # Update optimizer parameters to train weights instantiated lazily in
                         # the parallel_forward call.
-                        if dlrm.ndevices_available > 1 and dlrm.add_new_weights_to_params:
+                        if dlrm.ndevices_available > 1 and dlrm.add_new_weights_to_params and False:
 
                             # Pop any prior extra parameters. Priors may exist because
                             # self.parallel_model_is_not_prepared is set back to True
