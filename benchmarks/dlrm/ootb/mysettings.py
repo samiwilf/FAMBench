@@ -83,9 +83,9 @@ if SETTING == 3:
     ARGV = [
         "--mini-batch-size=2048", 
         f"--arch-sparse-feature-size={EMB_DIM}", 
-        "--arch-embedding-size=4538-346-175",
-        f"--arch-mlp-bot=1-512-256-{EMB_DIM}", 
-        "--arch-mlp-top=1024-1024-512-256-1",
+        "--arch-embedding-size=538-346-175",
+        f"--arch-mlp-bot=1-1-256-{EMB_DIM}", 
+        "--arch-mlp-top=1-1-1-256-1",
         "--data-generation=random",
         "--learning-rate=1.0", 
         "--num-batches=10", 
