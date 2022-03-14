@@ -408,7 +408,6 @@ def create_fbgemm_gpu_emb_bag(
             weights = fbgemm_gpu_emb_bag.split_embedding_weights()
             for i, emb in enumerate(weights):
                 emb.data.copy_(emb_l[i])
-                emb.data.requires_grad = requires_grad
 
         elif quantize_type == quantize_type.INT8:
             # copy quantized values upsampled/recasted to FP32
@@ -449,7 +448,6 @@ def create_fbgemm_gpu_emb_bag(
         weights = fbgemm_gpu_emb_bag.split_embedding_weights()
         for i, emb in enumerate(weights):
             emb.data.copy_(emb_l[i])
-            emb.data.requires_grad = requires_grad
 
     if not requires_grad:
         torch.no_grad()
@@ -2003,7 +2001,7 @@ def run():
 
         parameters = (
             dlrm.parameters()
-            if ext_dist.my_size == 1
+            if False #ext_dist.my_size == 1
             else [
                 {
                     "params": dlrm.bot_l.parameters(),
