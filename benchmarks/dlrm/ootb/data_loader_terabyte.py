@@ -111,9 +111,9 @@ def _batch_generator(
         #    x_cat = data["X_cat"]
         #    y = data["y"]
         print("NUMPY FILES ARE LOADING  START!!!!!!!!")
-        x_int = np.load(filepath[:-4] + "_int.npy")
-        x_cat = np.load(filepath[:-4] + "_cat.npy")
-        y = np.load(filepath[:-4] + "_y.npy")
+        x_int = np.load(filepath[:-4] + "_int.npy", mmap_mode='r')
+        x_cat = np.load(filepath[:-4] + "_cat.npy", mmap_mode='r')
+        y = np.load(filepath[:-4] + "_y.npy", mmap_mode='r')
         print("NUMPY FILES ARE LOADING  DONE!!!!!!!!!")
 
 
@@ -330,7 +330,7 @@ def _test_bin():
     dataset_binary = CriteoBinDataset(data_file=binary_data_file,
                                             counts_file=counts_file,
                                             batch_size=2048,)
-    from dlrm_data_pytorch import CriteoDataset 
+    from dlrm_data_pytorch import CriteoDataset
     from dlrm_data_pytorch import collate_wrapper_criteo_offset as collate_wrapper_criteo
 
     binary_loader = torch.utils.data.DataLoader(

@@ -205,18 +205,34 @@ class CriteoDataset(Dataset):
                 fi = self.npzfile + "_{0}_reordered.npz".format(
                     self.day
                 )
-                with np.load(fi) as data:
-                    self.X_int = data["X_int"]  # continuous  feature
-                    self.X_cat = data["X_cat"]  # categorical feature
-                    self.y = data["y"]          # target
+                #with np.load(fi) as data:
+                #    self.X_int = data["X_int"]  # continuous  feature
+                #    self.X_cat = data["X_cat"]  # categorical feature
+                #    self.y = data["y"]          # target
+
+                print("Loading test or val split using mmap_mode!!")
+                filepath = fi
+                self.X_int = np.load(filepath[:-4] + "_int.npy", mmap_mode='r')
+                self.X_cat = np.load(filepath[:-4] + "_cat.npy", mmap_mode='r')
+                self.y = np.load(filepath[:-4] + "_y.npy", mmap_mode='r')
+                print("DONE Loading test or val split using mmap_mode!!")
 
         else:
             # load and preprocess data
+
+            print("Loading in dlrm_data_pytorch training set using mmap_mode!!")
+            filepath = file
+            X_int = np.load(filepath[:-4] + "_int.npy", mmap_mode='r')
+            X_cat = np.load(filepath[:-4] + "_cat.npy", mmap_mode='r')
+            y = np.load(filepath[:-4] + "_y.npy", mmap_mode='r')
+            print("DONE Loading in dlrm_data_pytorch training set using mmap_mode!!")
+            print("loading data counts")
             with np.load(file) as data:
-                X_int = data["X_int"]  # continuous  feature
-                X_cat = data["X_cat"]  # categorical feature
-                y = data["y"]          # target
+            #    X_int = data["X_int"]  # continuous  feature
+            #    X_cat = data["X_cat"]  # categorical feature
+            #    y = data["y"]          # target
                 self.counts = data["counts"]
+            print("DONE loading data counts")
             self.m_den = X_int.shape[1]  # den_fea
             self.n_emb = len(self.counts)
             print("Sparse fea = %d, Dense fea = %d" % (self.n_emb, self.m_den))
@@ -289,10 +305,15 @@ class CriteoDataset(Dataset):
                         self.day
                     )
                     # print('Loading file: ', fi)
-                    with np.load(fi) as data:
-                        self.X_int = data["X_int"]  # continuous  feature
-                        self.X_cat = data["X_cat"]  # categorical feature
-                        self.y = data["y"]          # target
+                    #with np.load(fi) as data:
+                    #    self.X_int = data["X_int"]  # continuous  feature
+                    #    self.X_cat = data["X_cat"]  # categorical feature
+                    #    self.y = data["y"]          # target
+                    print("IN ITERATOR NUMPY FILES ARE LOADING  START!!!!!!!!")
+                    self.X_int = np.load(fi[:-4] + "_int.npy", mmap_mode='r')
+                    self.X_cat = np.load(fi[:-4] + "_cat.npy", mmap_mode='r')
+                    self.y = np.load(fi[:-4] + "_y.npy", mmap_mode='r')
+                    print("IN ITERATOR NUMPY FILES ARE LOADING  DONE!!!!!!!!!")
                     self.day = (self.day + 1) % self.max_day_range
 
                 i = index - self.day_boundary

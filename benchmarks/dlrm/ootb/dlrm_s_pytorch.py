@@ -200,7 +200,7 @@ def time_wrap(use_gpu):
 
 
 def dlrm_wrap(X, lS_o, lS_i, use_gpu, device, ndevices=1):
-    with record_function("DLRM forward"):        
+    with record_function("DLRM forward"):
         if dlrm.quantize_mlp_input_with_half_call:
             X = X.half()
         if use_gpu:
@@ -613,6 +613,7 @@ class DLRM_Net(nn.Module):
         emb_l = nn.ModuleList()
         v_W_l = []
         for i in range(0, ln.size):
+            print(f"Creating emb {i}")
             if ext_dist.my_size > 1:
                 if i not in self.local_emb_indices:
                     continue
@@ -633,24 +634,52 @@ class DLRM_Net(nn.Module):
                 _m = m[i] if n > self.md_threshold else base
                 EE = PrEmbeddingBag(n, _m, base)
                 # use np initialization as below for consistency...
-                W = np.random.uniform(
-                    low=-np.sqrt(1 / n), high=np.sqrt(1 / n), size=(n, _m)
-                ).astype(np.float32)
-                EE.embs.weight.data = torch.tensor(W, requires_grad=self.requires_grad)
+                if False:
+                    W = np.random.uniform(
+                        low=-np.sqrt(1 / n), high=np.sqrt(1 / n), size=(n, _m)
+                    ).astype(np.float32)
+                    EE.embs.weight.data = torch.tensor(W, requires_grad=self.requires_grad)
             else:
-                EE = nn.EmbeddingBag(n, m, mode="sum", sparse=True)
-                # initialize embeddings
-                # nn.init.uniform_(EE.weight, a=-np.sqrt(1 / n), b=np.sqrt(1 / n))
-                np.random.seed(0)
-                W = np.random.uniform(
-                    low=-np.sqrt(1 / n), high=np.sqrt(1 / n), size=(n, m)
-                ).astype(np.float32)
-                # approach 1
-                EE.weight.data.copy_(torch.tensor(W, requires_grad=self.requires_grad))
-                # approach 2
-                # EE.weight.data.copy_(torch.tensor(W))
-                # approach 3
-                # EE.weight = Parameter(torch.tensor(W),requires_grad=True)
+                device = 'cpu'
+                if self.use_gpu:
+                    if ext_dist.my_size > 1:
+                        device = f'cuda'
+                    else:
+                        device = f'cuda:{i % self.ndevices_available}'
+                print(f"Instantiate Embedding Bag on device {device}")
+                #import gc
+                #gc.collect()
+                #torch.cuda.empty_cache()
+                device = torch.device(device)
+                EE = nn.EmbeddingBag(
+                    n,
+                    m,
+                    mode="sum",
+                    sparse=True,
+                    device=device,
+                    _weight=torch.empty(
+                        n,
+                        m,
+                        device=device,
+                    ).uniform_(
+                        float(-np.sqrt(1 / n)),
+                        float(np.sqrt(1 / n)),
+                    ),
+                )
+                print("Instantiate Embedding Bag STOP")
+                if False:
+                    # initialize embeddings
+                    # nn.init.uniform_(EE.weight, a=-np.sqrt(1 / n), b=np.sqrt(1 / n))
+                    np.random.seed(0)
+                    W = np.random.uniform(
+                        low=-np.sqrt(1 / n), high=np.sqrt(1 / n), size=(n, m)
+                    ).astype(np.float32)
+                    # approach 1
+                    EE.weight.data.copy_(torch.tensor(W, requires_grad=self.requires_grad))
+                    # approach 2
+                    # EE.weight.data.copy_(torch.tensor(W))
+                    # approach 3
+                    # EE.weight = Parameter(torch.tensor(W),requires_grad=True)
             if weighted_pooling is None:
                 v_W_l.append(None)
             else:
@@ -720,6 +749,10 @@ class DLRM_Net(nn.Module):
                 self.weighted_pooling = "learned"
             else:
                 self.weighted_pooling = weighted_pooling
+
+            self.weighted_pooling = None
+            weighted_pooling = None
+
             # create variables for QR embedding if applicable
             self.qr_flag = qr_flag
             if self.qr_flag:
@@ -1043,9 +1076,11 @@ class DLRM_Net(nn.Module):
 
     def sequential_forward(self, dense_x, lS_o, lS_i):
 
-        SAVE_DEBUG_DATA(dense_x, DENSE_LOG_FILE)
-        SAVE_DEBUG_DATA(torch.stack(lS_i), SPARSE_LOG_FILE)
-
+        try:
+            SAVE_DEBUG_DATA(dense_x, DENSE_LOG_FILE)
+            SAVE_DEBUG_DATA(torch.stack(lS_i), SPARSE_LOG_FILE)
+        except:
+            pass
         # process dense features (using bottom mlp), resulting in a row vector
         x = self.apply_mlp(dense_x, self.bot_l)
         # debug prints
@@ -1057,8 +1092,11 @@ class DLRM_Net(nn.Module):
         # for y in ly:
         #     print(y.detach().cpu().numpy())
 
-        SAVE_DEBUG_DATA(x, D_OUT_LOG_FILE)
-        SAVE_DEBUG_DATA(torch.stack(ly), E_OUT_LOG_FILE)
+        try:
+            SAVE_DEBUG_DATA(x, D_OUT_LOG_FILE)
+            SAVE_DEBUG_DATA(torch.stack(ly), E_OUT_LOG_FILE)
+        except:
+            pass
 
         # interact features (dense and sparse)
         z = self.interact_features(x, ly)
@@ -1541,6 +1579,7 @@ def run():
     global writer
     print(ARGV)
     args = parser.parse_args(ARGV)
+    #args = parser.parse_args()
 
     if args.dataset_multiprocessing:
         assert float(sys.version[:3]) > 3.7, (
@@ -1898,10 +1937,10 @@ def run():
             32,
         ], "only support 8/16/32-bit but got {}".format(args.quantize_mlp_with_bit)
 
-        if not args.use_torch2trt_for_mlp: 
-            if args.quantize_mlp_with_bit == 16 and use_gpu:            
+        if not args.use_torch2trt_for_mlp:
+            if args.quantize_mlp_with_bit == 16 and use_gpu:
                 dlrm.top_l = dlrm.top_l.half()
-                dlrm.bot_l = dlrm.bot_l.half()         
+                dlrm.bot_l = dlrm.bot_l.half()
             elif args.quantize_mlp_with_bit in [8, 16]:
                 assert not use_gpu, (
                     "Cannot run PyTorch's built-in dynamic quantization for mlp "
@@ -1946,11 +1985,13 @@ def run():
                     )
                 ]
             )
-        if use_gpu:
-            dlrm = dlrm.to(device)
-            if dlrm.weighted_pooling == "fixed":
-                for k, w in enumerate(dlrm.v_W_l):
-                    dlrm.v_W_l[k] = w.cuda()
+        # if use_gpu:
+        #     dlrm = dlrm.to(device)
+        #     if dlrm.weighted_pooling == "fixed":
+        #         for k, w in enumerate(dlrm.v_W_l):
+        #             dlrm.v_W_l[k] = w.cuda()
+        dlrm.bot_l = dlrm.bot_l.to(device)
+        dlrm.top_l = dlrm.top_l.to(device)
     else:
         # Handing Multi-gpu mode
         dlrm.bot_l = dlrm.bot_l.to(device)
@@ -1967,7 +2008,7 @@ def run():
             elif args.quantize_mlp_with_bit == 8:
                 additional_args['int8_mode']=True
             dlrm.bot_l = torch2trt(dlrm.bot_l, (bot_l_sample_input,), **additional_args)
-            dlrm.top_l = torch2trt(dlrm.top_l, (top_l_sample_input,), **additional_args)                  
+            dlrm.top_l = torch2trt(dlrm.top_l, (top_l_sample_input,), **additional_args)
         elif torch2trt is None:
             sys.exit("\ntorch2trt module failed to import.\n\n" + torch2trt_import_error_msg)
         else:
@@ -2168,7 +2209,7 @@ def run():
             if args.fb5logger is not None:
                 bmlogger = get_bmlogger(args.fb5logger)
                 bmlogger.header("DLRM", "OOTB", "train", args.fb5config, score_metric=loggerconstants.EXPS)
-            
+
             k = 0
             while k < args.nepochs:
                 if args.mlperf_logging:
@@ -2195,7 +2236,11 @@ def run():
                 if args.mlperf_logging:
                     previous_iteration_time = None
 
+                #train_ld = iter(train_ld)
+                #for j in range(256055):
+                #    inputBatch = next(train_ld)
                 for j, inputBatch in enumerate(train_ld):
+                    print(f"Step {j}")
                     if j == 0 and args.save_onnx:
                         X_onnx, lS_o_onnx, lS_i_onnx, _, _, _ = unpack_batch(inputBatch)
 
@@ -2249,7 +2294,7 @@ def run():
                         r = np.random.uniform(0.0, 0.99, size=(BATCH_SIZE, CAT_FEATURE_COUNT))
                         for i in range(BATCH_SIZE):
                             for j in range(CAT_FEATURE_COUNT):
-                                r[i,j] = r[i,j] * LN_EMB[j]                        
+                                r[i,j] = r[i,j] * LN_EMB[j]
                         r = np.trunc(r).astype(np.int32)
                         r = r.transpose()
 
@@ -2344,7 +2389,7 @@ def run():
                             optimizer.zero_grad()
                         # backward pass
                         E.backward()
-                        
+
                         # optimizer
                         if (
                             args.mlperf_logging
@@ -2504,7 +2549,7 @@ def run():
                             break
                 if k == 0:
                     bmlogger.run_stop(nbatches - args.warmup_steps, args.mini_batch_size)
-                    
+
                 if args.mlperf_logging:
                     mlperf_logger.barrier()
                     mlperf_logger.log_end(
